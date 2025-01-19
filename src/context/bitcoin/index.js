@@ -917,12 +917,14 @@ export const MAP_PREFIX = `1PuQa7K62MiKCtssSLKy1kh56WWU7MtUR5`;
 
 export const decrypt = (data, privateKey, publicKey) => {
   // console.log("decrypt", { data, privateKey });
-  return publicKey
-    ? ECIES()
-        .privateKey(privateKey)
-        .publicKey(publicKey)
-        .decrypt(Buffer.from(data, "base64"))
-    : ECIES().privateKey(privateKey).decrypt(Buffer.from(data, "base64"));
+  const ecies = ECIES();
+  let eciesKey = ecies.privateKey(privateKey);
+  if (publicKey) {
+    eciesKey = eciesKey.publicKey(publicKey);
+  }
+  const buf = Buffer.from(data, "base64")
+  const decrypted = eciesKey.decrypt(buf);
+  return decrypted;
 };
 
 export const encrypt = (data, privateKey, publicKey) => {
