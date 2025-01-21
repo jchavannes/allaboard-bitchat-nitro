@@ -264,7 +264,7 @@ const Message = ({ message, reactions, appIcon, handleClick }) => {
     //   },
     // });
 
-    const data = head(m.B)?.Data?.utf8;
+    const data = head(m.B)?.Data?.utf8 || head(m.B)?.content;
     // if (data?.length > 0) {
     //   return data;
 
@@ -301,7 +301,7 @@ const Message = ({ message, reactions, appIcon, handleClick }) => {
      */
     const contentType =
       head(m.B)?.["content-type"] ?? head(m.B)?.["media_type"];
-    if (contentType !== "text/plain") {
+    if (!contentType || !contentType.includes("text/plain")) {
       return null;
     }
 

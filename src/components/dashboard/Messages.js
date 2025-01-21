@@ -277,7 +277,7 @@ const Messages = () => {
               session,
             });
             try {
-              const data = head(message.B)?.Data?.utf8 || btoa(unescape(encodeURIComponent(head(message.AIP)?.data?.[2])));
+              const data = head(message.B)?.Data?.data || btoa(unescape(encodeURIComponent(head(message.AIP)?.data?.[2])));
               const publicKey = messageSelf ? undefined : new bsv.PublicKey(friendPubKey);
               const decryptedContent = decrypt(data, friendPrivateKey, publicKey);
               // console.log("decrypted", decryptedContent);
@@ -286,6 +286,7 @@ const Messages = () => {
                 ...{
                   B: [
                     {
+                      "content-type": "text/plain",
                       content: Buffer.from(decryptedContent).toString("utf8"),
                     },
                   ],
