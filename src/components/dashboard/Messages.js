@@ -223,20 +223,29 @@ const Messages = () => {
 
             // If this is self, get the nodes public key
 
-            const messageFromMe =
-              head(message.AIP)?.bapId === session.user?.bapId;
+            const aip = head(message.AIP);
+            const messageFromMe = (aip?.bapId === session.user?.idKey) ||
+                aip?.address === users.byId[session.user?.idKey]?.currentAddress;
             const messageToMe =
-              head(message.MAP)?.bapID === session.user?.bapId;
+              head(message.MAP)?.bapID === session.user?.idKey;
             const messageSelf = messageToMe && messageFromMe;
+            let seedString;
+            let friendBapId = head(message.MAP)?.bapID;
+            if (messageSelf) {
+              seedString = "notes";
+            } else if (messageToMe) {
+              for (const userId in users.byId) {
+                if (users.byId[userId].currentAddress === aip?.address) {
+                  friendBapId = userId;
+                  seedString = userId;
+                  break;
+                }
+              }
+            } else {
+              seedString = head(message.MAP)?.bapID;
+            }
 
-            const friendPrivateKey = friendPrivateKeyFromSeedString(
-              messageSelf
-                ? "notes"
-                : messageToMe
-                ? head(message.AIP)?.bapId
-                : head(message.MAP)?.bapID,
-              decIdentity.xprv
-            );
+            const friendPrivateKey = friendPrivateKeyFromSeedString(seedString, decIdentity.xprv);
 
             // let hdPrivateFriendKey;
             // try {
@@ -257,11 +266,7 @@ const Messages = () => {
 
             // get the friend's public key
             // TODO: Handle self case
-            const friendPubKey = messageToMe
-              ? head(friendRequests.incoming.byId[head(message.AIP).bapId]?.MAP)
-                  .publicKey
-              : head(friendRequests.incoming.byId[head(message.MAP).bapID]?.MAP)
-                  .publicKey;
+            const friendPubKey = head(friendRequests.incoming.byId[friendBapId]?.MAP)?.publicKey;
 
             if (!messageSelf && (!friendPrivateKey || !friendPubKey)) {
               console.error(
@@ -280,31 +285,16 @@ const Messages = () => {
               session,
             });
             try {
-              const decryptedContent = decrypt(
-                head(message.B)?.Data?.utf8,
-                friendPrivateKey,
-                messageSelf
-                  ? undefined
-                  : messageToMe
-                  ? new bsv.PublicKey(
-                      head(
-                        friendRequests.incoming.byId[head(message.AIP).bapId]
-                          ?.MAP
-                      ).publicKey
-                    )
-                  : new bsv.PublicKey(
-                      head(
-                        friendRequests.incoming.byId[head(message.MAP).bapID]
-                          ?.MAP
-                      ).publicKey
-                    )
-              );
+              const data = head(message.B)?.Data?.data || btoa(unescape(encodeURIComponent(head(message.AIP)?.data?.[2])));
+              const publicKey = messageSelf ? undefined : new bsv.PublicKey(friendPubKey);
+              const decryptedContent = decrypt(data, friendPrivateKey, publicKey);
               // console.log("decrypted", decryptedContent);
               return {
                 ...message,
                 ...{
                   B: [
                     {
+                      "content-type": "text/plain",
                       content: Buffer.from(decryptedContent).toString("utf8"),
                     },
                   ],
