@@ -347,8 +347,6 @@ const BitcoinProvider = (props) => {
             userId
           );
 
-          // const decIdentity = await hcDecrypt(identity);
-
           if (!decIdentity) {
             console.log("no ident info");
             return;
@@ -356,7 +354,6 @@ const BitcoinProvider = (props) => {
 
           const { memberList } = storeAPI.getState();
           const { friendRequests } = memberList;
-          console.log({ friendRequests });
           if (
             !(
               friendRequests.incoming.byId[userId] ||
@@ -373,16 +370,6 @@ const BitcoinProvider = (props) => {
             );
             return;
           }
-          console.log(
-            "trying to use public key from user",
-            head(friendRequests.incoming.byId[userId]?.MAP).publicKey
-          );
-          // const friendPublicKey =
-          //   decIdentity?.bapId === userId
-          //     ? friendPublicKeyFromSeedString("notes", decIdentity.xprv)
-          //     : new bsv.PublicKey(
-          //         friendRequests.incoming.byId[userId].MAP.publicKey
-          //       );
 
           const friendPrivateKey = friendPrivateKeyFromSeedString(
             decIdentity?.bapId === userId ? "notes" : userId,
@@ -392,7 +379,7 @@ const BitcoinProvider = (props) => {
           // get the friend's public key
           const friendPubKey = head(
             friendRequests.incoming.byId[userId]?.MAP
-          ).publicKey;
+          )?.publicKey;
 
           console.log({
             f1: friendPrivateKey.publicKey.toString(),
@@ -406,8 +393,6 @@ const BitcoinProvider = (props) => {
           );
           dataPayload[2] = `application/bitcoin-ecies; content-type=text/plain`;
           dataPayload[3] = `binary`;
-
-          // lets make sure we can decrypt it too
         }
 
         const hexArray = dataPayload.map((d) =>

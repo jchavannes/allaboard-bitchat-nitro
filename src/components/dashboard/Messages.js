@@ -188,7 +188,7 @@ const Messages = () => {
   const activeUser = useMemo(() => users?.byId[users.active], [users]);
 
   const self = useMemo(() => {
-    return activeUserId && session.user?.bapId === activeUserId;
+    return activeUserId && session.user?.idKey === activeUserId;
   }, [session, activeUserId]);
 
   const messagesSorted = useMemo(() => {
